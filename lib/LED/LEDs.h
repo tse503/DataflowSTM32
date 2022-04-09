@@ -2,7 +2,7 @@
 
 enum LEDColour {GREEN_LED, ORANGE_LED, RED_LED, BLUE_LED, ALL_LED};
 
-void initialiseLEDPorts();
+void initLEDs();
 
 void LEDOn(uint32_t index);
 void LEDOff(uint32_t index);

@@ -1,25 +1,27 @@
 #include "LEDs.h"
 #include <stm32f407xx.h>
 
-/* Enable peripheral clock register to on-board LEDs and set mode registers */
-void initialiseLEDPorts() {
-	// Set bit 3 of RCC_AHB1ENR register to 1 in RCC AHB1 peripheral clock register - enables clock to GPIO D port, corresponding to LED peripherals
-	RCC->AHB1ENR = (RCC->AHB1ENR & ~RCC_AHB1ENR_GPIODEN_Msk) | (0x01 << RCC_AHB1ENR_GPIODEN_Pos);
-	
-	// Set mode register of GPIO port D, pin 12 (green LED) to 01, indicates general purpose output mode
-	GPIOD->MODER = (GPIOD->MODER & ~GPIO_MODER_MODER12_Msk) | (0x01 << GPIO_MODER_MODER12_Pos);
-	
-	// Set mode register of GPIO port D, pin 13 (orange LED) to 01, indicates general purpose output mode
-	GPIOD->MODER = (GPIOD->MODER & ~GPIO_MODER_MODER13_Msk) | (0x01 << GPIO_MODER_MODER13_Pos);
-	
-	// Set mode register of GPIO port D, pin 14 (red LED) to 01, indicates general purpose output mode
-	GPIOD->MODER = (GPIOD->MODER & ~ GPIO_MODER_MODER14_Msk) | (0x01 << GPIO_MODER_MODER14_Pos);
-	
-	/* Set moder register of GPIO port D, pin 15 (blue LED) to 01, indicates general purpose output mode
-	   (GPIOD->MODER & ~GPIO_MODER_MODER15_Msk) -sets bits 30 and 31 to 0, doesn't change other bits
-	   (0x01 << GPIO_MODER_MODE15_Pos) - sets bit 31 to 0 and bit 30 to 1, read as 01
-	*/
-	GPIOD->MODER = (GPIOD->MODER & ~GPIO_MODER_MODER15_Msk) | (0x01 << GPIO_MODER_MODE15_Pos);
+void initLEDs(void) {
+    // Enable AHB1 Clock to GPIO Port D (all LED pins on this port)
+    RCC->AHB1ENR = ((RCC->AHB1ENR & ~RCC_AHB1ENR_GPIODEN_Msk) | (0x01 << RCC_AHB1ENR_GPIODEN_Pos)); 
+
+    /* Set GPIO Port D Mode Register to 0b01 for LED pins - indicates general purpose output mode */
+    GPIOD->MODER = ((GPIOD->MODER & ~GPIO_MODER_MODE12_Msk) | (0x01 << GPIO_MODER_MODE12_Pos)); // Pin 12 - Green LED
+    GPIOD->MODER = ((GPIOD->MODER & ~GPIO_MODER_MODE13_Msk) | (0x01 << GPIO_MODER_MODE13_Pos)); // Pin 13 - Orange LED
+    GPIOD->MODER = ((GPIOD->MODER & ~GPIO_MODER_MODE14_Msk) | (0x01 << GPIO_MODER_MODE14_Pos)); // Pin 14 - Red LED
+    GPIOD->MODER = ((GPIOD->MODER & ~GPIO_MODER_MODE15_Msk) | (0x01 << GPIO_MODER_MODE15_Pos)); // Pin 15 - Blue LED
+
+    /* Set GPIO Port D Output Type Register to 0b0 for LED pins - indicates output push-pull type */
+    GPIOD->OTYPER = (GPIOD->OTYPER & ~GPIO_OTYPER_OT12_Msk); // Pin 12 - Green LED
+    GPIOD->OTYPER = (GPIOD->OTYPER & ~GPIO_OTYPER_OT13_Msk); // Pin 13 - Orange LED
+    GPIOD->OTYPER = (GPIOD->OTYPER & ~GPIO_OTYPER_OT14_Msk); // Pin 14 - Red LED
+    GPIOD->OTYPER = (GPIOD->OTYPER & ~GPIO_OTYPER_OT15_Msk); // Pin 15 - Blue LED
+
+    /* Set GPIO Port D Pull-up/pull-down Register to 0b00 for LED pins - indicates output push-pull type */
+    GPIOD->PUPDR = (GPIOD->PUPDR & ~GPIO_PUPDR_PUPD12_Msk); // Pin 12 - Green LED
+    GPIOD->PUPDR = (GPIOD->PUPDR & ~GPIO_PUPDR_PUPD13_Msk); // Pin 13 - Orange LED
+    GPIOD->PUPDR = (GPIOD->PUPDR & ~GPIO_PUPDR_PUPD14_Msk); // Pin 14 - Red LED
+    GPIOD->PUPDR = (GPIOD->PUPDR & ~GPIO_PUPDR_PUPD15_Msk); // Pin 15 - Blue LED
 }
 
 /* Turn on the LED at the given index */

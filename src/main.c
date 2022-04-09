@@ -1,30 +1,35 @@
 #include "BFLO_internal.h"
 #include "oscillatorLUT.h"
 #include "LEDs.h"
+#include "user_button.h"
 #include <stm32f407xx.h>
 #include <stdio.h>
 
-void setup(void) {
+void SysTick_Handler(void) {
+    
+}
+
+void setupClockAndPeripherals(void) {
     SystemCoreClockUpdate();
-	SysTick_Config(SystemCoreClock / 4);
-    initialiseLEDPorts();
+	SysTick_Config(SystemCoreClock);
+    initLEDs();
+    initUserButton();
 }
 
 int main(void) {
-    setup();
+    setupClockAndPeripherals();
 
-    module_t osc0;
     graph_t synthGraph;
+    module_t osc0;
 
     BFLO_initGraph(&synthGraph);
+    BFLO_initOcillatorLUTModule(&osc0, "Sine", 440.0f);
 
-    if(BFLO_initOcillatorLUTModule(&osc0, "Sine", 440.0f)) {
-        printf("Oscillator module successfully initialsied.\n");
+    while (1) {
+        if (GPIOA->IDR & GPIO_IDR_ID0_Msk) {
+            LEDOnColour(ALL_LED);        
+        } else {
+            LEDOffColour(ALL_LED); 
+        }    
     }
-
-    BFLO_insertModule(&synthGraph, &osc0);
-
-    LEDOnColour(ALL_LED);
-
-    return 0;
 }

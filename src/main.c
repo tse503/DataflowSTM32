@@ -23,7 +23,7 @@ int main(void) {
     module_t osc0;
 
     BFLO_initGraph(&synthGraph);
-    BFLO_initOcillatorLUTModule(&osc0, "Sine", 440.0f);
+    BFLO_initOcillatorLUTModule(&osc0, "Sine", 880.0f);
 
     while (1) {
         if (GPIOA->IDR & GPIO_IDR_ID0_Msk) {

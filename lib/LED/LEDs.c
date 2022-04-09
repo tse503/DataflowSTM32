@@ -1,6 +1,7 @@
 #include "LEDs.h"
 #include <stm32f407xx.h>
 
+/* Enable clock to user LEDs and setup GPIO registers */
 void initLEDs(void) {
     // Enable AHB1 Clock to GPIO Port D (all LED pins on this port)
     RCC->AHB1ENR = ((RCC->AHB1ENR & ~RCC_AHB1ENR_GPIODEN_Msk) | (0x01 << RCC_AHB1ENR_GPIODEN_Pos)); 
@@ -24,7 +25,7 @@ void initLEDs(void) {
     GPIOD->PUPDR = (GPIOD->PUPDR & ~GPIO_PUPDR_PUPD15_Msk); // Pin 15 - Blue LED
 }
 
-/* Turn on the LED at the given index */
+/* Turn on the LED at the specified index */
 void LEDOn(uint32_t index) {
     if (index == 0) {
         GPIOD->BSRR = 0x1000;       // Set GPIO D bit 12 (corresponding to green LED) to 1
@@ -39,7 +40,7 @@ void LEDOn(uint32_t index) {
     }
 }
 
-/* Turn on the LED at the given index */
+/* Turn off the LED at the specified index */
 void LEDOff(uint32_t index) {
     if (index == 0) {
         GPIOD->BSRR = 0x10000000;   // Reset GPIO D bit 12 (corresponding to green LED) to 0
@@ -54,6 +55,7 @@ void LEDOff(uint32_t index) {
     }
 }
 
+/* Turn on the LED using the specified colour */
 void LEDOnColour(enum LEDColour colour) {
     if (colour == GREEN_LED) {
         GPIOD->BSRR = 0x1000;               // Set GPIO D bit 12 (corresponding to green LED) to 1
@@ -70,6 +72,7 @@ void LEDOnColour(enum LEDColour colour) {
     }
 }
 
+/* Turn off the LED using the specified colour */
 void LEDOffColour(enum LEDColour colour) {
     if (colour == GREEN_LED) {
         GPIOD->BSRR = 0x10000000;           // Set GPIO D bit 12 (corresponding to green LED) to 1

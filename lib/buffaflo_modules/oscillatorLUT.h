@@ -1,4 +1,10 @@
 #include "BFLO_internal.h"
+#include <math.h>
+
+// TODO: Remove these when table received externally
+#define SINESIZE 1024
+#define PI 3.141592653589793 
+int16_t SineBuff[SINESIZE];
 
 void BFLO_processOscillatorLUTModule(module_t * module);
 

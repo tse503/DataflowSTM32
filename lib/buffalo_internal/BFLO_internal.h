@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define BUFFER_SIZE 8
+#define BUFFER_SIZE 1024
 #define MAX_GRAPH_SIZE 8
 #define MAX_NAME_LENGTH 32
 

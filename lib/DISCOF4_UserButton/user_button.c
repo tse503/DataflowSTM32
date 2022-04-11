@@ -10,5 +10,5 @@ void initUserButton(void) {
 }
 
 uint32_t isUserButtonPressed() {
-    return !(GPIOA->ODR & 0x01);
+    return (GPIOA->IDR & 0x01);
 }

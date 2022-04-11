@@ -19,8 +19,8 @@ uint32_t BFLO_initControlModule(module_t * module, char * moduleName, float init
     // Allocate memory for one control value in output 0
     module->outputs[0].data = malloc(sizeof(float));
 
-    // Set initial output value to 0
-    *(float *)(module->outputs[0].data) = 0.0f;
+    // Set initial output value
+    *(float *)(module->outputs[0].data) = initValue;
 
     // Set module's associated process
     module->process = BFLO_doNothing;

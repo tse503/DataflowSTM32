@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "user_button.h": "c",
-        "stm32f407xx.h": "c"
+        "stm32f407xx.h": "c",
+        "control.h": "c",
+        "oscillatorlut.h": "c"
     }
 }

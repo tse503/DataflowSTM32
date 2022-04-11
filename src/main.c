@@ -3,6 +3,7 @@
 #include "user_button.h"
 
 #include "BFLO_internal.h"
+#include "control.h"
 #include "oscillatorLUT.h"
 
 #include <stm32f407xx.h>
@@ -20,7 +21,7 @@ enum eNoteStatus {ready, going, finish} noteStatus = ready;
 enum eBufferStatus {empty, finished, firstHalfReq, firstHalfDone, secondHalfReq, secondHalfDone} bufferStatus = empty;
 
 uint32_t userButtonStatus = 0;
-int32_t freqIndex = 0;
+int32_t scaleIndex = 0;
 int32_t scaleDirection = 1; // 1 = go up scale, -1 = go down scale
 
 float const CMajScale[8] = {261.00f, 293.66f, 329.63f, 349.23f, 392.00f, 440.00f, 493.88f, 523.25f};
@@ -66,12 +67,16 @@ int main(void) {
 	float phaseIncrement = (desiredFreq * SINESIZE) / AUDIO_FREQUENCY_44K; 
 	
     graph_t synthGraph;
-    module_t osc;
+    module_t freqControl, osc;
 
     BFLO_initGraph(&synthGraph);
+    BFLO_initControlModule(&freqControl, "Frequency Control", CMajScale[0]);
     BFLO_initOcillatorLUTModule(&osc, "Sine Oscillator", 440.0f);
 
-    BFLO_processOscillatorLUTModule(&osc);
+    BFLO_insertModule(&synthGraph, &freqControl);
+    BFLO_insertModule(&synthGraph, &osc);
+
+    BFLO_connectModules(&freqControl, 0, &osc, 0);
 
 	// Start the audio driver play routine:
 	myAudioStartPlaying(PlayBuff, PBSIZE);
@@ -80,11 +85,13 @@ int main(void) {
 		if (isUserButtonPressed()) {
 			// Check if button has been just been pressed (button status previosuly = 0)
 			if (userButtonStatus == 0) {
-				desiredFreq = CMajScale[freqIndex];
-				freqIndex += scaleDirection;
-				if (freqIndex == 7) {
+                // On button press, increment the note in the scale
+				BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
+				scaleIndex += scaleDirection;
+                // When reached either end of scale, change direction
+				if (scaleIndex == 7) {
 					scaleDirection = -1;
-				} else if (freqIndex == 0) {
+				} else if (scaleIndex == 0) {
 					scaleDirection = 1;
 				}
 				LEDOn(LED_GREEN);
@@ -124,14 +131,7 @@ int main(void) {
 					currentPhase -= SINESIZE;
 				}
 
-				int16_t nextSample = SineBuff[(uint16_t)(currentPhase)];
-                int16_t volatile modSample = (((int16_t *)(osc.outputs[0].data))[index]); // NOTE: Only volatile to avoid being optimised out by compiler for debugging purposes           
-
-                if (nextSample == modSample) {
-                    LEDOff(LED_RED);
-                } else {
-                    LEDOff(LED_GREEN);
-                }
+                int16_t modSample = (int16_t)(((float *)(osc.outputs[0].data))[index]);      
 
 				PlayBuff[i] = modSample;
 				PlayBuff[i + 1] = modSample;

@@ -9,12 +9,12 @@
  */
 
 void BFLO_processOscillatorLUTModule(module_t * module) {
-    float freq, currentPhase, phaseIncrement;
+    float volatile frequency, currentPhase, phaseIncrement;
 
     // Get internal module parameters
-    freq = *(float *)module->parameters[0].data;
+    frequency = BFLO_getInputControl(module, 0);
+    phaseIncrement = (frequency * 1024) / 44100;    // TODO: Replace magic numbers
     currentPhase = *(float *)module->parameters[1].data;
-    phaseIncrement = *(float *)module->parameters[2].data;
 
     for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
         currentPhase += phaseIncrement;
@@ -23,8 +23,8 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
             currentPhase -= SINESIZE;
         }
 
-        uint16_t x = SineBuff[(uint16_t)(currentPhase)];
-        ((int16_t *)(module->outputs[0].data))[i] = SineBuff[(uint16_t)(currentPhase)];
+        uint16_t x = SineLUT[(uint16_t)(currentPhase)];
+        ((float *)(module->outputs[0].data))[i] = SineLUT[(uint16_t)(currentPhase)];
     }
 
     *(float *)module->parameters[1].data = currentPhase;
@@ -49,7 +49,7 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float
     module->outputs = malloc(sizeof(output_t));
 
     // Allocate memory for one buffer in output 0
-    module->outputs[0].data = calloc(BUFFER_SIZE, sizeof(int16_t)); // TODO: Change this back to float
+    module->outputs[0].data = calloc(BUFFER_SIZE, sizeof(float));
 
     // Allocate memory for 3 parameter structs
     module->parameters = calloc(module->numParameters, sizeof(parameter_t));
@@ -67,7 +67,7 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float
     // Set initial parameter values
     *(float *)(module->parameters[0].data) = initFrequency;
     *(float *)(module->parameters[1].data) = 0.0f;
-    *(float *)(module->parameters[2].data) = (initFrequency * 1024) / 44100;    // TODO: Replace magic numbers  
+    *(float *)(module->parameters[2].data) = (initFrequency * 1024) / 44100;    // TODO: Replace magic numbers // QUESTION: Does this value actually need to be stored? Recomputed in procees loop anyway 
 
     // Set module's associated process
     module->process = BFLO_processOscillatorLUTModule;
@@ -82,7 +82,7 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float
     // Set up the sine look-up table:
 	for (int i = 0; i < SINESIZE; i++) {
 		float q = 32760 * sin(i * 2.0 * PI / SINESIZE);
-		SineBuff[i] = (int16_t)q;
+		SineLUT[i] = q;
 	}
 
     return 1;

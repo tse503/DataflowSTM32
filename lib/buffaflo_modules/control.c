@@ -13,6 +13,7 @@ uint32_t BFLO_initControlModule(module_t * module, char * moduleName, float init
     module->numInputs = 0;
     module-> numOutputs = 1;
     module->numParameters = 0;
+    
     // Allocate memory for one output_t struct
     module->outputs = malloc(sizeof(output_t));
 

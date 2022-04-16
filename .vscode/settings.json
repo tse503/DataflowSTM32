@@ -3,6 +3,7 @@
         "user_button.h": "c",
         "stm32f407xx.h": "c",
         "control.h": "c",
-        "oscillatorlut.h": "c"
+        "oscillatorlut.h": "c",
+        "bflo_internal.h": "c"
     }
 }

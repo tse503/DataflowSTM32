@@ -16,17 +16,20 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
     phaseIncrement = (frequency * 1024) / 44100;    // TODO: Replace magic numbers
     currentPhase = *(float *)module->parameters[1].data;
 
+    /* Fill output buffer with values from look-up table */
     for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
         currentPhase += phaseIncrement;
         
+        // If current phase exceeds look-up table size, wrap-around
         if (currentPhase > SINESIZE) {
             currentPhase -= SINESIZE;
         }
 
-        uint16_t x = SineLUT[(uint16_t)(currentPhase)];
+        // Set the next sample in the output buffer as the value in the look-up table at the current phase 
         ((float *)(module->outputs[0].data))[i] = SineLUT[(uint16_t)(currentPhase)];
     }
 
+    // Update the module's current phase internal parameter
     *(float *)module->parameters[1].data = currentPhase;
 }
 

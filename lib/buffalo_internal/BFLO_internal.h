@@ -2,6 +2,8 @@
 #define DATAFLOW_H
 
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define BUFFER_SIZE 1024
 #define MAX_GRAPH_SIZE 8
@@ -13,14 +15,15 @@ enum IO_type {BUFFER, CONTROL, TABLE};
 // TODO: Use defintions for status flag bit shift positions
 
 /*~~~~~ Status flags ~~~~~*/
+
 #define STATUS_FLAG_ORDERED (1UL << 0)   // When true, module has been ordered correctly during topological ordering of graph
 #define STATUS_FLAG_ENQUEUED (1UL << 1)  // When true, module has been enqueued during Kahn's topological ordering algorithm 
 
 /*~~~~~ Structure Definitions ~~~~~*/
 
 typedef struct { // QUESTION: Separate array for parameter and operation modules? 
-    uint32_t size;                          // Current count of modules connected in the graph                    
-    struct module * modules[MAX_GRAPH_SIZE];     // Array to hold pointer-to-modules
+    uint32_t size;                              // Current count of modules connected in the graph                    
+    struct module * modules[MAX_GRAPH_SIZE];    // Array to hold pointer-to-modules
 } graph_t;
 
 typedef struct {

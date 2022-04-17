@@ -4,6 +4,7 @@
         "stm32f407xx.h": "c",
         "control.h": "c",
         "oscillatorlut.h": "c",
-        "bflo_internal.h": "c"
+        "bflo_internal.h": "c",
+        "bufferadder.h": "c"
     }
 }

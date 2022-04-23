@@ -4,7 +4,7 @@
 
 /*~~~~~ Utility Functions  ~~~~~*/
 
-/* Performs initialisation tasks common to all modules - reduces code size and reuse */
+/* Performs initialisation tasks common to all modules */
 void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint32_t numInputAllocations, uint32_t numOutputAllocations, uint32_t numParameterAllocations) {
     // Set number of IO and parameters
     module->numInputs = numInputAllocations;

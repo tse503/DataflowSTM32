@@ -10,23 +10,6 @@ void BFLO_processBufferAdderModule(module_t * module) {
 }
 
 uint32_t BFLO_initBufferAdderModule(module_t * module, graph_t * graph, char * moduleName) {
-    // // Set module's name
-    // strncpy(module->name, moduleName, MAX_NAME_LENGTH);
-
-    // // Initialise all module flags as clear
-    // module->status = 0;
-
-    // // Set number of IO and parameters
-    // module->numInputs = 2;
-    // module->numOutputs = 1;
-    // module->numParameters = 0;
-
-    // // Allocate memory for two input_t structs
-    // module->inputs = calloc(2, sizeof(input_t));
-
-    // // Allocate memory for one output_t struct
-    // module->outputs = malloc(sizeof(output_t));
-
     // Perform common module initialisation tasks - allocating memory for 2 inputs, 1 output, 0 parameters
     BFLO_initModule(module, graph, moduleName, 2, 1, 0); 
 

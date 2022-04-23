@@ -70,26 +70,21 @@ int main(void) {
     module_t freqControl, freqInterval, freqMultiplier, volControl0, volControl1, fundamentalOsc, fifthOsc;
 
     BFLO_initGraph(&synthGraph);
+
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", CMajScale[0]);
 	BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
     BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
-	BFLO_initBufferScalerModule(&volControl0, &synthGraph, "Volume Control 0");						// Volume control for fundamental oscillator
-	BFLO_initBufferScalerModule(&volControl1, &synthGraph, "Volume Control 1"); 						// Volume control for 5th oscillator
+	// BFLO_initBufferScalerModule(&volControl0, &synthGraph, "Volume Control 0");						// Volume control for fundamental oscillator
+	// BFLO_initBufferScalerModule(&volControl1, &synthGraph, "Volume Control 1"); 						// Volume control for 5th oscillator
 	BFLO_initOcillatorLUTModule(&fundamentalOsc, &synthGraph, "Fundamental Oscillator", 440.0f);
 	BFLO_initOcillatorLUTModule(&fifthOsc, &synthGraph, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
-
-    BFLO_insertModule(&synthGraph, &freqControl);
-	BFLO_insertModule(&synthGraph, &freqInterval);
-	BFLO_insertModule(&synthGraph, &freqMultiplier);
-    BFLO_insertModule(&synthGraph, &fundamentalOsc);
-	BFLO_insertModule(&synthGraph, &fifthOsc);
-
-	// BFLO_orderGraphDFS(&synthGraph);
 
     BFLO_connectModules(&freqControl, 0, &fundamentalOsc, 0);
 	BFLO_connectModules(&freqControl, 0, &freqMultiplier, 0);
 	BFLO_connectModules(&freqInterval, 0, &freqMultiplier, 1);
 	BFLO_connectModules(&freqMultiplier, 0, &fifthOsc, 0);
+
+	BFLO_orderGraphDFS(&synthGraph);
 
 	// Start the audio driver play routine:
 	myAudioStartPlaying(PlayBuff, PBSIZE);
@@ -142,10 +137,12 @@ int main(void) {
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
 
-                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);      
+                int16_t fundamentalSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);
+				int16_t fifthSample = (int16_t)(((float *)(fifthOsc.outputs[0].data))[index]);        
 
-				PlayBuff[i] = modSample;
-				PlayBuff[i + 1] = modSample;
+				// Play fundamental on the left channel, fifth on the right 
+				PlayBuff[i] = fundamentalSample;
+				PlayBuff[i + 1] = fifthSample;
 
                 index++;
 			}

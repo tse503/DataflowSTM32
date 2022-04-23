@@ -4,6 +4,45 @@
 
 /*~~~~~ Utility Functions  ~~~~~*/
 
+/* Performs initialisation tasks common to all modules - reduces code size and reuse */
+void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint32_t numInputAllocations, uint32_t numOutputAllocations, uint32_t numParameterAllocations) {
+    // Set number of IO and parameters
+    module->numInputs = numInputAllocations;
+    module->numOutputs = numOutputAllocations;
+    module->numParameters = numParameterAllocations;
+
+    // Allocate memory for inputs
+    if (numInputAllocations == 1) {
+        module->inputs = malloc(sizeof(input_t));
+    } else if (numInputAllocations > 1) {
+        module->inputs = calloc(numInputAllocations, sizeof(input_t));
+    }
+
+    // Allocate memory for outputs
+    if (numOutputAllocations == 1) {
+        module->outputs = malloc(sizeof(input_t));
+    } else if (numOutputAllocations > 1) {
+        module->outputs = calloc(numInputAllocations, sizeof(input_t));
+    }
+
+    // Allocate memory for outputs
+    if (numParameterAllocations == 1) {
+        module->parameters = malloc(sizeof(input_t));
+    } else if (numParameterAllocations > 1) {
+        module->parameters = calloc(numParameterAllocations, sizeof(input_t));
+    }
+
+    // Set module's name
+    strncpy(module->name, moduleName, MAX_NAME_LENGTH);
+
+    // Initialise all module flags as clear
+    module->status = 0;
+
+    // Insert module into specified graph
+    BFLO_insertModule(graph, module);
+}
+
+
 /* Connect the specified source module's output to the specified sink modules' input */
 void BFLO_connectModules(module_t * sourceModule, uint32_t outputIndex, module_t * sinkModule, uint32_t inputIndex) {
     // Check source and sink modules are in the same graph

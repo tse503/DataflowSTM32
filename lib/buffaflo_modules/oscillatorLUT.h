@@ -8,4 +8,4 @@ float SineLUT[SINESIZE];
 
 void BFLO_processOscillatorLUTModule(module_t * module);
 
-uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float initFrequency);
+uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * moduleName, float initFrequency);

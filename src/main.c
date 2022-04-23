@@ -4,7 +4,6 @@
 
 #include "BFLO_internal.h"
 #include "control.h"
-#include "controlAdder.h"
 #include "controlMultiplier.h"
 #include "bufferScaler.h"
 #include "bufferAdder.h"
@@ -66,33 +65,31 @@ void setupAudioAndPeripherals(void) {
 
 int main(void) {
     setupAudioAndPeripherals();
-
+	
     graph_t synthGraph;
     module_t freqControl, freqInterval, freqMultiplier, volControl0, volControl1, fundamentalOsc, fifthOsc;
 
     BFLO_initGraph(&synthGraph);
-
-
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", CMajScale[0]);
-	// BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
-    // BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
-	// BFLO_initBufferScalerModule(&volControl0, &synthGraph, "Volume Control 0");						// Volume control for fundamental oscillator
-	// BFLO_initBufferScalerModule(&volControl1, &synthGraph, "Volume Control 1"); 						// Volume control for 5th oscillator
+	BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
+    BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
+	BFLO_initBufferScalerModule(&volControl0, &synthGraph, "Volume Control 0");						// Volume control for fundamental oscillator
+	BFLO_initBufferScalerModule(&volControl1, &synthGraph, "Volume Control 1"); 						// Volume control for 5th oscillator
 	BFLO_initOcillatorLUTModule(&fundamentalOsc, &synthGraph, "Fundamental Oscillator", 440.0f);
-	// BFLO_initOcillatorLUTModule(&fifthOsc, &synthGraph, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
+	BFLO_initOcillatorLUTModule(&fifthOsc, &synthGraph, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
 
-    // BFLO_insertModule(&synthGraph, &freqControl);
-	// BFLO_insertModule(&synthGraph, &freqInterval);
-	// BFLO_insertModule(&synthGraph, &freqMultiplier);
-    // BFLO_insertModule(&synthGraph, &fundamentalOsc);
-	// BFLO_insertModule(&synthGraph, &fifthOsc);
+    BFLO_insertModule(&synthGraph, &freqControl);
+	BFLO_insertModule(&synthGraph, &freqInterval);
+	BFLO_insertModule(&synthGraph, &freqMultiplier);
+    BFLO_insertModule(&synthGraph, &fundamentalOsc);
+	BFLO_insertModule(&synthGraph, &fifthOsc);
 
-	BFLO_orderGraphDFS(&synthGraph);
+	// BFLO_orderGraphDFS(&synthGraph);
 
     BFLO_connectModules(&freqControl, 0, &fundamentalOsc, 0);
-	// BFLO_connectModules(&freqControl, 0, &freqMultiplier, 0);
-	// BFLO_connectModules(&freqInterval, 0, &freqMultiplier, 1);
-	// BFLO_connectModules(&freqMultiplier, 0, &fifthOsc, 0);
+	BFLO_connectModules(&freqControl, 0, &freqMultiplier, 0);
+	BFLO_connectModules(&freqInterval, 0, &freqMultiplier, 1);
+	BFLO_connectModules(&freqMultiplier, 0, &fifthOsc, 0);
 
 	// Start the audio driver play routine:
 	myAudioStartPlaying(PlayBuff, PBSIZE);
@@ -118,7 +115,6 @@ int main(void) {
 			userButtonStatus = 0;
 		}
 
-		// phaseIncrement = (desiredFreq * SINESIZE) / AUDIO_FREQUENCY_44K; 
 		// printf("Adding a tad of delay in the loop...\n");	// QUESTION: Why does adding some delay make the sound work
 		// LEDOffColour(ORANGE_LED);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
 
@@ -138,21 +134,15 @@ int main(void) {
 		}
 		
 		if (startFill != endFill) {
+			// BFLO_processGraph(&synthGraph);
+			BFLO_processControlMultiplierModule(&freqMultiplier);
             BFLO_processOscillatorLUTModule(&fundamentalOsc);
+			BFLO_processOscillatorLUTModule(&fifthOsc);
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
-				// currentPhase += phaseIncrement;
-				
-				// if (currentPhase > SINESIZE) {
-				// 	currentPhase -= SINESIZE;
-				// }
 
-                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);
-
-				if(i == 0)
-					LEDOn(LED_ORANGE);
-				// else LEDOff(LED_ORANGE);      
+                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);      
 
 				PlayBuff[i] = modSample;
 				PlayBuff[i + 1] = modSample;
@@ -160,5 +150,5 @@ int main(void) {
                 index++;
 			}
 		}
-	} // End of while loop		
+	} // End of while loop	
 }

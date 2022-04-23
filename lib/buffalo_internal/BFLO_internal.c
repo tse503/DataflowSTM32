@@ -20,16 +20,16 @@ void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint
 
     // Allocate memory for outputs
     if (numOutputAllocations == 1) {
-        module->outputs = malloc(sizeof(input_t));
+        module->outputs = malloc(sizeof(output_t));
     } else if (numOutputAllocations > 1) {
-        module->outputs = calloc(numInputAllocations, sizeof(input_t));
+        module->outputs = calloc(numInputAllocations, sizeof(output_t));
     }
 
-    // Allocate memory for outputs
+    // Allocate memory for parameters
     if (numParameterAllocations == 1) {
-        module->parameters = malloc(sizeof(input_t));
+        module->parameters = malloc(sizeof(parameter_t));
     } else if (numParameterAllocations > 1) {
-        module->parameters = calloc(numParameterAllocations, sizeof(input_t));
+        module->parameters = calloc(numParameterAllocations, sizeof(parameter_t));
     }
 
     // Set module's name

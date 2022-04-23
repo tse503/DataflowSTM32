@@ -102,7 +102,7 @@ int main(void) {
 			// Check if button has been just been pressed (button status previosuly = 0)
 			if (userButtonStatus == 0) {
                 // On button press, increment the note in the scale
-				// BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
+				BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
 				scaleIndex += scaleDirection;
                 // When reached either end of scale, change direction
 				if (scaleIndex == 7) {
@@ -138,10 +138,7 @@ int main(void) {
 		}
 		
 		if (startFill != endFill) {
-			// BFLO_processGraph(&synthGraph);
-			// BFLO_processControlMultiplierModule(&freqMultiplier);
             BFLO_processOscillatorLUTModule(&fundamentalOsc);
-			// BFLO_processOscillatorLUTModule(&fifthOsc);
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
@@ -151,7 +148,11 @@ int main(void) {
 				// 	currentPhase -= SINESIZE;
 				// }
 
-                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);      
+                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);
+
+				if(i == 0)
+					LEDOn(LED_ORANGE);
+				// else LEDOff(LED_ORANGE);      
 
 				PlayBuff[i] = modSample;
 				PlayBuff[i + 1] = modSample;
@@ -159,5 +160,5 @@ int main(void) {
                 index++;
 			}
 		}
-	} // End of while loop	
+	} // End of while loop		
 }

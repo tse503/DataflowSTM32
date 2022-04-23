@@ -65,11 +65,6 @@ void setupAudioAndPeripherals(void) {
 
 int main(void) {
     setupAudioAndPeripherals();
-
-	// Set-up the phase and phase increment:
-	float currentPhase = 0.0;
-	float desiredFreq = 880.0f;
-	float phaseIncrement = (desiredFreq * SINESIZE) / AUDIO_FREQUENCY_44K; 
 	
     graph_t synthGraph;
     module_t freqControl, freqInterval, freqMultiplier, volControl0, volControl1, fundamentalOsc, fifthOsc;
@@ -120,7 +115,6 @@ int main(void) {
 			userButtonStatus = 0;
 		}
 
-		phaseIncrement = (desiredFreq * SINESIZE) / AUDIO_FREQUENCY_44K; 
 		// printf("Adding a tad of delay in the loop...\n");	// QUESTION: Why does adding some delay make the sound work
 		// LEDOffColour(ORANGE_LED);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
 
@@ -147,11 +141,6 @@ int main(void) {
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
-				currentPhase += phaseIncrement;
-				
-				if (currentPhase > SINESIZE) {
-					currentPhase -= SINESIZE;
-				}
 
                 int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);      
 

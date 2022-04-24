@@ -2,9 +2,11 @@
 #include <math.h>
 
 // TODO: Remove these when table received externally
-#define SINESIZE 1024
+#define LUTSIZE 1024
 #define PI 3.141592653589793 
-float SineLUT[SINESIZE];
+float SineLUT[LUTSIZE];
+float SawUpLUT[LUTSIZE];
+float SawDownLUT[LUTSIZE];
 
 void BFLO_processOscillatorLUTModule(module_t * module);
 

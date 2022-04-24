@@ -67,7 +67,7 @@ int main(void) {
 
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", CMajScale[0]);
 	BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
-	BFLO_initControlModule(&volControl, &synthGraph, "Volume Control 0", 0.2);
+	BFLO_initControlModule(&volControl, &synthGraph, "Volume Control", 0.2);
 	BFLO_initBufferScalerModule(&volScaler0, &synthGraph, "Volume Scaler 0");						// Volume scaler for fundamental oscillator
 	BFLO_initBufferScalerModule(&volScaler1, &synthGraph, "Volume Scaler 1"); 						// Volume scaler for 5th oscillator
     BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval

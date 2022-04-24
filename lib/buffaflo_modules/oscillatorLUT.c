@@ -21,8 +21,8 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
         currentPhase += phaseIncrement;
         
         // If current phase exceeds look-up table size, wrap-around
-        if (currentPhase > SINESIZE) {
-            currentPhase -= SINESIZE;
+        if (currentPhase > LUTSIZE) {
+            currentPhase -= LUTSIZE;
         }
 
         // Set the next sample in the output buffer as the value in the look-up table at the current phase 
@@ -64,11 +64,16 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * 
     
     module->outputs[0].type = BUFFER;
 
-    // TODO: Remove this when LUT received externally
+    // TODO: Remove these when LUT received externally
     // Set up the sine look-up table:
-	for (int i = 0; i < SINESIZE; i++) {
-		float q = 32760 * sin(i * 2.0 * PI / SINESIZE);
+	for (int i = 0; i < LUTSIZE; i++) {
+		float q = 32760 * sin(i * 2.0 * PI / LUTSIZE);
 		SineLUT[i] = q;
+	}
+
+    for (int i = 0; i < LUTSIZE; i++) {
+		float q = -32760 + (i * 65520 / (LUTSIZE - 1));
+		SawUpLUT[i] = q;
 	}
 
     return 1;

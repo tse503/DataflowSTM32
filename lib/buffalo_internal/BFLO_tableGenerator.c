@@ -34,6 +34,7 @@ static void generateSquare(float * table) {
 
 /* Fill the table with generated samples based on the specified waveform */
 void BFLO_generateLUT(float * table, enum BFLO_WAVEFORM waveform) {
+    // Generate waveform based on specified waveform
     if (waveform == SINE) {
         generateSine(table);
     } else if (waveform == SAWTOOTH) {

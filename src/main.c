@@ -14,13 +14,12 @@
 #include <math.h>
 
 #define PBSIZE 4096
-#define SINESIZE 1024
+#define LUTSIZE 1024
 #define PI 3.141592653589793
 
 #define FIFTH_INTERVAL 1.49830674321f
 
 int16_t PlayBuff[PBSIZE];
-int16_t SineBuff[SINESIZE];
 
 enum eNoteStatus {ready, going, finish} noteStatus = ready;
 enum eBufferStatus {empty, finished, firstHalfReq, firstHalfDone, secondHalfReq, secondHalfDone} bufferStatus = empty;
@@ -44,6 +43,7 @@ void myAudioTransferCompleteCallback(void) {
 void setupAudioAndPeripherals(void) {
     initUserLEDs();
 	initUserButton();
+
 	// Speed up the clock, then configure the audio timer (required for checking timeouts):
 	myAudioSpeedUpTheSystemClock();
 	initAudioTimer();
@@ -55,48 +55,43 @@ void setupAudioAndPeripherals(void) {
 	for(int i=0; i <= PBSIZE; i++) {
 		PlayBuff[i] = 0;
 	}
-	
-	// Set up the sine look-up table:
-	for (int i = 0; i < SINESIZE; i++) {
-		float q = 32760 * sin(i * 2.0 * PI / SINESIZE);
-		SineBuff[i] = (int16_t)q;
-	}
 }
 
 int main(void) {
     setupAudioAndPeripherals();
 	
     graph_t synthGraph;
-    module_t freqControl, freqInterval, freqMultiplier, volControl0, volControl1, fundamentalOsc, fifthOsc;
+    module_t freqControl, freqInterval, freqMultiplier, volControl, volScaler0, volScaler1, fundamentalOsc, fifthOsc;
 
     BFLO_initGraph(&synthGraph);
-    BFLO_initControlModule(&freqControl, "Frequency Control", CMajScale[0]);
-	BFLO_initControlModule(&freqInterval, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
-    BFLO_initControlMultiplierModule(&freqMultiplier, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
-	BFLO_initBufferScalerModule(&volControl0, "Volume Control 0");						// Volume control for fundamental oscillator
-	BFLO_initBufferScalerModule(&volControl1, "Volume Control 1"); 						// Volume control for 5th oscillator
-	BFLO_initOcillatorLUTModule(&fundamentalOsc, "Fundamental Oscillator", 440.0f);
-	BFLO_initOcillatorLUTModule(&fifthOsc, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
 
-    BFLO_insertModule(&synthGraph, &freqControl);
-	BFLO_insertModule(&synthGraph, &freqInterval);
-	BFLO_insertModule(&synthGraph, &freqMultiplier);
-    BFLO_insertModule(&synthGraph, &fundamentalOsc);
-	BFLO_insertModule(&synthGraph, &fifthOsc);
-
-	// BFLO_orderGraphDFS(&synthGraph);
+    BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", CMajScale[0]);
+	BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
+	BFLO_initControlModule(&volControl, &synthGraph, "Volume Control", 0.2);
+	BFLO_initBufferScalerModule(&volScaler0, &synthGraph, "Volume Scaler 0");						// Volume scaler for fundamental oscillator
+	BFLO_initBufferScalerModule(&volScaler1, &synthGraph, "Volume Scaler 1"); 						// Volume scaler for 5th oscillator
+    BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
+	BFLO_initOcillatorLUTModule(&fundamentalOsc, &synthGraph, "Fundamental Oscillator", 440.0f);
+	BFLO_initOcillatorLUTModule(&fifthOsc, &synthGraph, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
 
     BFLO_connectModules(&freqControl, 0, &fundamentalOsc, 0);
 	BFLO_connectModules(&freqControl, 0, &freqMultiplier, 0);
+	BFLO_connectModules(&volControl, 0, &volScaler0, 1);
+	BFLO_connectModules(&volControl, 0, &volScaler1, 1);
+
 	BFLO_connectModules(&freqInterval, 0, &freqMultiplier, 1);
 	BFLO_connectModules(&freqMultiplier, 0, &fifthOsc, 0);
+
+	BFLO_connectModules(&fundamentalOsc, 0, &volScaler0, 0);
+
+	// BFLO_orderGraphDFS(&synthGraph);
 
 	// Start the audio driver play routine:
 	myAudioStartPlaying(PlayBuff, PBSIZE);
 
 	while(1) {
 		if (isUserButtonPressed()) {
-			// Check if button has been just been pressed (button status previosuly = 0)
+			// Check if button has been just been pressed (button status previously = 0)
 			if (userButtonStatus == 0) {
                 // On button press, increment the note in the scale
 				BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
@@ -134,18 +129,20 @@ int main(void) {
 		}
 		
 		if (startFill != endFill) {
-			// BFLO_processGraph(&synthGraph);
-			BFLO_processControlMultiplierModule(&freqMultiplier);
-            BFLO_processOscillatorLUTModule(&fundamentalOsc);
-			BFLO_processOscillatorLUTModule(&fifthOsc);
+			BFLO_processGraph(&synthGraph);
+			// BFLO_processControlMultiplierModule(&freqMultiplier);
+            // BFLO_processOscillatorLUTModule(&fundamentalOsc);
+			// BFLO_processOscillatorLUTModule(&fifthOsc);
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
 
-                int16_t modSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);      
+                int16_t fundamentalSample = (int16_t)(((float *)(volScaler0.outputs[0].data))[index]);
+				int16_t fifthSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);        
 
-				PlayBuff[i] = modSample;
-				PlayBuff[i + 1] = modSample;
+				// Play fundamental on the left channel, fifth on the right 
+				PlayBuff[i] = fundamentalSample;
+				PlayBuff[i + 1] = fifthSample;
 
                 index++;
 			}

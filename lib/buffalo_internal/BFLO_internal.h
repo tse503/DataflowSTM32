@@ -9,6 +9,11 @@
 #define MAX_GRAPH_SIZE 8
 #define MAX_NAME_LENGTH 32
 
+typedef enum {
+    BFLO_MODULE_ALLOCATION_ERROR    = 0x00U, 
+    BFLO_MODULE_ALLOCATION_SUCCESS  = 0x01U
+} BFLO_ERROR_t;
+
 enum IO_type {BUFFER, CONTROL, TABLE};
 // TODO: enum for parameter type?
 
@@ -57,7 +62,7 @@ typedef struct module { // QUESTION: Is this kind of forward-declaration sutiabl
 } module_t;
 
 /*~~~~~ Utility Functions  ~~~~~*/
-
+void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint32_t numInputAllocations, uint32_t numOutputAllocations, uint32_t numParameterAllocations);
 void BFLO_connectModules(module_t * sourceModule, uint32_t outputIndex, module_t * sinkModule, uint32_t inputIndex);
 
 float BFLO_getInputControl(module_t * module, uint32_t inputIndex);

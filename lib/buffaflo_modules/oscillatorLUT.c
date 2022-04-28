@@ -21,8 +21,8 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
         currentPhase += phaseIncrement;
         
         // If current phase exceeds look-up table size, wrap-around
-        if (currentPhase > SINESIZE) {
-            currentPhase -= SINESIZE;
+        if (currentPhase > LUTSIZE) {
+            currentPhase -= LUTSIZE;
         }
 
         // Set the next sample in the output buffer as the value in the look-up table at the current phase 
@@ -33,29 +33,12 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
     *(float *)module->parameters[1].data = currentPhase;
 }
 
-uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float initFrequency) {
-    // Set module's name
-    strncpy(module->name, moduleName, MAX_NAME_LENGTH);
-
-    // Initialise all module flags as clear
-    module->status = 0;
-
-    // Set number of IO and parameters
-    module->numInputs = 2;
-    module-> numOutputs = 1;
-    module->numParameters = 3;
-
-    // Allocate memory for two input_t structs
-    module->inputs = calloc(2, sizeof(input_t));
-
-    // Allocate memory for one output_t struct
-    module->outputs = malloc(sizeof(output_t));
+uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * moduleName, float initFrequency) {
+    // Perform common module initialisation tasks - allocating memory for 2 inputs, 1 output, 3 parameters
+    BFLO_initModule(module, graph, moduleName, 2, 1, 3); 
 
     // Allocate memory for one buffer in output 0
     module->outputs[0].data = calloc(BUFFER_SIZE, sizeof(float));
-
-    // Allocate memory for 3 parameter structs
-    module->parameters = calloc(module->numParameters, sizeof(parameter_t));
 
     // Allocate memory for 3 floats in each parameter's data member
     module->parameters[0].data = malloc(sizeof(float));
@@ -81,11 +64,16 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, char * moduleName, float
     
     module->outputs[0].type = BUFFER;
 
-    // TODO: Remove this when LUT received externally
+    // TODO: Remove these when LUT received externally
     // Set up the sine look-up table:
-	for (int i = 0; i < SINESIZE; i++) {
-		float q = 32760 * sin(i * 2.0 * PI / SINESIZE);
+	for (int i = 0; i < LUTSIZE; i++) {
+		float q = 32760 * sin(i * 2.0 * PI / LUTSIZE);
 		SineLUT[i] = q;
+	}
+
+    for (int i = 0; i < LUTSIZE; i++) {
+		float q = -32760 + (i * 65520 / (LUTSIZE - 1));
+		SawUpLUT[i] = q;
 	}
 
     return 1;

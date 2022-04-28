@@ -42,7 +42,6 @@ void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint
     BFLO_insertModule(graph, module);
 }
 
-
 /* Connect the specified source module's output to the specified sink modules' input */
 void BFLO_connectModules(module_t * sourceModule, uint32_t outputIndex, module_t * sinkModule, uint32_t inputIndex) {
     // Check source and sink modules are in the same graph
@@ -113,20 +112,39 @@ void BFLO_setOutputControl(module_t * module, uint32_t outputIndex, float value)
 float * BFLO_getInputBuffer(module_t * module, uint32_t inputIndex) {
     // Check specified input index is within bounds of module's inputs
     if (inputIndex < module->numInputs) {
-        // Check requested type matches input's type
+        // Check specified type matches input's type
         if (module->inputs[inputIndex].type == BUFFER) {
             module_t * sourceModule = module->inputs[inputIndex].source;
             uint32_t outIndex = module->inputs[inputIndex].index;
 
             // Cast void pointer to pointer-to-float
-            float * buffer = (float *)(sourceModule->outputs[outIndex].data); // QUESTION: Could just return this line...
+            float * buffer = (float *)(sourceModule->outputs[outIndex].data); // TODO: Could just return this line...
             return buffer;
         }
     }
+
+    // If checks aren't passed, return NULL to represent an error
+    return NULL;
 }
 
 float * BFLO_getOutputBuffer(module_t * module, uint32_t outputIndex) {
     return (float *)(module->outputs[outputIndex].data);
+}
+
+table_t * BFLO_getInputTable(module_t * module, uint32_t inputIndex) {
+    // Check specified input index is within bounds of module's inputs
+    if (inputIndex < module->numInputs) {
+        // Check specified type matches input's type
+        if (module->inputs[inputIndex].type == TABLE) {
+            module_t * sourceModule = module->inputs[inputIndex].source;
+            uint32_t outIndex = module->inputs[inputIndex].index;
+
+            return (table_t *)(sourceModule->outputs[outIndex].data);
+        }
+    }
+    
+    // If checks aren't passed, return NULL to represent an error
+    return NULL;
 }
 
 /* Function that does nothing. Used in process member for modules that don't perform a process. */

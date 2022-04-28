@@ -6,6 +6,7 @@
 #include <string.h>
 
 #define BUFFER_SIZE 1024
+#define MAX_LUT_SIZE 1024
 #define MAX_GRAPH_SIZE 8
 #define MAX_NAME_LENGTH 32
 
@@ -51,15 +52,20 @@ typedef struct {
 typedef struct module { // QUESTION: Is this kind of forward-declaration sutiable for resolving circular dependencies between module_t and input_t?
     char name[MAX_NAME_LENGTH];         // String module name // TODO: Make this const?
     uint32_t status;                    // Holds boolean flags about the module's status
-    uint32_t numInputs;                 
-    uint32_t numOutputs;                
-    uint32_t numParameters;             
+    uint32_t numInputs;                 // Number of inputs the module has                 
+    uint32_t numOutputs;                // Number of outputs the module has
+    uint32_t numParameters;             // Number of internal parameters the module has
     input_t * inputs;                   // Module's inputs
     output_t * outputs;                 // Module's outputs
     parameter_t * parameters;           // Module's internal parameters
     void (*process)(struct module *);   // Function pointer to module's process function QUESTION: Should this be a const?
     graph_t * graph;                    // Pointer to graph that contains the module
 } module_t;
+
+typedef struct {
+    char name[MAX_NAME_LENGTH];         // Name of the lookup table
+    float samples[MAX_LUT_SIZE];        // Array of samples in the lookup table
+} table_t;
 
 /*~~~~~ Utility Functions  ~~~~~*/
 void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint32_t numInputAllocations, uint32_t numOutputAllocations, uint32_t numParameterAllocations);
@@ -71,6 +77,8 @@ void BFLO_setOutputControl(module_t * module, uint32_t outputIndex, float value)
 
 float * BFLO_getInputBuffer(module_t * module, uint32_t inputIndex);
 float * BFLO_getOutputBuffer(module_t * module, uint32_t outputIndex);
+
+table_t * BFLO_getInputTable(module_t * module, uint32_t inputIndex);
 
 void BFLO_doNothing(module_t * module);
 

@@ -5,6 +5,7 @@
         "control.h": "c",
         "oscillatorlut.h": "c",
         "bflo_internal.h": "c",
-        "bufferadder.h": "c"
+        "bufferadder.h": "c",
+        "bflo_tablegenerator.h": "c"
     }
 }

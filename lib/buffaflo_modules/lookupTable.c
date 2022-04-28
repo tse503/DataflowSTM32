@@ -4,8 +4,8 @@ uint32_t BFLO_initLookupTableModule(module_t * module, graph_t * graph, char * m
     // Perform common module initialisation tasks - allocating memory for 0 inputs, 1 output, 0 parameters
     BFLO_initModule(module, graph, moduleName, 0, 1, 0); 
 
-    // Allocate memory for one lookup table value in output 0
-    module->outputs[0].data = malloc(sizeof(table_t));
+    // Allocate memory for one pointer to a lookup table value in output 0
+    module->outputs[0].data = malloc(sizeof(table_t *));
 
     // Set pointer to initial lookup table
     (module->outputs[0].data) = initTable;
@@ -14,7 +14,7 @@ uint32_t BFLO_initLookupTableModule(module_t * module, graph_t * graph, char * m
     module->process = BFLO_doNothing;
 
     // Set module's IO types   
-    module->outputs[0].type = CONTROL;
+    module->outputs[0].type = TABLE;
 
     return 1;
 }

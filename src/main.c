@@ -3,6 +3,7 @@
 #include "user_button.h"
 
 #include "BFLO_internal.h"
+#include "BFLO_tableGenerator.h"
 #include "control.h"
 #include "controlMultiplier.h"
 #include "bufferScaler.h"
@@ -15,7 +16,6 @@
 
 #define PBSIZE 4096
 #define LUTSIZE 1024
-#define PI 3.141592653589793
 
 #define FIFTH_INTERVAL 1.49830674321f
 
@@ -42,7 +42,7 @@ void myAudioTransferCompleteCallback(void) {
 
 void setupAudioAndPeripherals(void) {
     initUserLEDs();
-	initUserButton();
+	initUserButton();	
 
 	// Speed up the clock, then configure the audio timer (required for checking timeouts):
 	myAudioSpeedUpTheSystemClock();
@@ -59,7 +59,7 @@ void setupAudioAndPeripherals(void) {
 
 int main(void) {
     setupAudioAndPeripherals();
-	
+
     graph_t synthGraph;
     module_t freqControl, freqInterval, freqMultiplier, volControl, volScaler0, volScaler1, fundamentalOsc, fifthOsc;
 

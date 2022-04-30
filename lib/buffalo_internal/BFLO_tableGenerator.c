@@ -32,6 +32,37 @@ static void generateSquare(float * table) {
 	}
 }
 
+/* Static function for generating a triangle lookup table */
+static void generateTriangle(float * table) {
+    // Indices of quarter- and half-way values of the lookup table 
+    uint32_t quarter = (MAX_LUT_SIZE * 0.25);
+    uint32_t half = (MAX_LUT_SIZE * 0.5);
+
+    // Ramp up from 0 to maximum amplitude
+    for (uint32_t i = 0; i < quarter; i++) {
+        table[i] = 32760 * i / quarter; 
+    }
+
+    // Ramp down from maximum amplitude to minimum amplitude
+    for (uint32_t i = 0; i < half; i++) {
+        table[i + quarter] = 32760 - (2 * 32760 * i / half);
+    }
+
+    // Ramp up from minimum amplitude to 0
+    for (uint32_t i = 0; i < quarter; i++) {
+        table[i + (3 * quarter)] = -32760 + (32760 * i / quarter); 
+    }
+
+    // Samples are at maximum amplitude for the first half of the LUT 
+    for (uint32_t i = 0; i < (MAX_LUT_SIZE / 2); i++) {
+		table[i] = 32760;
+	}
+    // Samples are at minimum amplitude for the second half of the LUT 
+    for (uint32_t i = (MAX_LUT_SIZE / 2); i < MAX_LUT_SIZE; i++) {
+		table[i] = -32760;
+	}
+}
+
 /* Fill the table with generated samples based on the specified waveform */
 void BFLO_generateLUT(float * table, enum BFLO_WAVEFORM waveform) {
     // Generate waveform based on specified waveform

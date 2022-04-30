@@ -21,7 +21,7 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
         currentPhase += phaseIncrement;
         
         // If current phase exceeds look-up table size, wrap-around
-        if (currentPhase > LUTSIZE) {
+        if (currentPhase >= LUTSIZE) {
             currentPhase -= LUTSIZE;
         }
 

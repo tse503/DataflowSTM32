@@ -8,7 +8,7 @@ uint32_t BFLO_initLookupTableModule(module_t * module, graph_t * graph, char * m
     module->outputs[0].data = malloc(sizeof(table_t *));
 
     // Set pointer to initial lookup table
-    (module->outputs[0].data) = initTable;
+    module->outputs[0].data = initTable;
 
     // Set module's associated process
     module->process = BFLO_doNothing;

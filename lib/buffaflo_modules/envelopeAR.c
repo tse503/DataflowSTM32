@@ -20,12 +20,27 @@ void BFLO_processEnvelopeARModule(module_t * module) {
     releaseSamples = *(float *)module->parameters[1].data;
     currentSample = *(float *)module->parameters[2].data;
 
+    // If the reset input is true, reset the current sample position to 0
+    if (reset) {
+        currentSample = 0;
+    }
+
     for (uint32_t i = 0; i < BUFFER_SIZE; i++) {
         // If in attack stage, ramp up to maximum
         if (currentSample < attackSamples) {
-
+            ((float *)(module->outputs[0].data))[i] = buffer0[i] * currentSample / attackSamples;
+            currentSample++;
+        } 
+        
+        // If in release stage, ramp down to 0
+        else {
+            ((float *)(module->outputs[0].data))[i] = buffer0[i] * (1 - ((currentSample - attackSamples) / releaseSamples));
+            currentSample++;
         }
     }
+
+    // Update envelope position internal parameter
+    *(float *)(module->parameters[2].data) = currentSample;
 }
 
 uint32_t BFLO_initEnvelopeARModule(module_t * module, graph_t * graph, char * moduleName, float initAttackSamples, float initReleaseSamples) {

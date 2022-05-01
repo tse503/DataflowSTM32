@@ -5,23 +5,21 @@
 #include "BFLO_internal.h"
 #include "BFLO_tableGenerator.h"
 #include "control.h"
-#include "controlMultiplier.h"
-#include "bufferScaler.h"
-#include "bufferAdder.h"
 #include "oscillatorLUT.h"
+#include "lookupTable.h"
+#include "envelopeAR.h"
 
 #include <stm32f407xx.h>
 #include <stdint.h>
 #include <math.h>
 
 #define PBSIZE 4096
-#define LUTSIZE 1024
 
 #define FIFTH_INTERVAL 1.49830674321f
 
+table_t SineTable;
 int16_t PlayBuff[PBSIZE];
 
-enum eNoteStatus {ready, going, finish} noteStatus = ready;
 enum eBufferStatus {empty, finished, firstHalfReq, firstHalfDone, secondHalfReq, secondHalfDone} bufferStatus = empty;
 
 uint32_t userButtonStatus = 0;
@@ -57,32 +55,33 @@ void setupAudioAndPeripherals(void) {
 	}
 }
 
+void setupLUTs(void) {
+	// Fill the sine table with samples
+	BFLO_generateLUT(SineTable.samples, SINE);
+
+	// Give it a name
+	strncpy(SineTable.name, "Sine Lookup", MAX_NAME_LENGTH);
+}
+
 int main(void) {
     setupAudioAndPeripherals();
+	setupLUTs();
 
     graph_t synthGraph;
-    module_t freqControl, freqInterval, freqMultiplier, volControl, volScaler0, volScaler1, fundamentalOsc, fifthOsc;
+    module_t freqControl, envReset, table, osc, env;
 
     BFLO_initGraph(&synthGraph);
 
-    BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", CMajScale[0]);
-	BFLO_initControlModule(&freqInterval, &synthGraph, "Frequency Interval", FIFTH_INTERVAL);		// Root frequency multiplied by this number gives its 5th interval
-	BFLO_initControlModule(&volControl, &synthGraph, "Volume Control", 0.2);
-	BFLO_initBufferScalerModule(&volScaler0, &synthGraph, "Volume Scaler 0");						// Volume scaler for fundamental oscillator
-	BFLO_initBufferScalerModule(&volScaler1, &synthGraph, "Volume Scaler 1"); 						// Volume scaler for 5th oscillator
-    BFLO_initControlMultiplierModule(&freqMultiplier, &synthGraph, "Frequency Multiplier");			// Multiplies the frequency control by the frequency interval
-	BFLO_initOcillatorLUTModule(&fundamentalOsc, &synthGraph, "Fundamental Oscillator", 440.0f);
-	BFLO_initOcillatorLUTModule(&fifthOsc, &synthGraph, "Fifth Oscillator", 440.0f * FIFTH_INTERVAL);
+    BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", 440.0f);
+	BFLO_initControlModule(&envReset, &synthGraph, "Frequency Control", 0.0f);
+	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
+	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
+	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 5.0f, 5.0f);
 
-    BFLO_connectModules(&freqControl, 0, &fundamentalOsc, 0);
-	BFLO_connectModules(&freqControl, 0, &freqMultiplier, 0);
-	BFLO_connectModules(&volControl, 0, &volScaler0, 1);
-	BFLO_connectModules(&volControl, 0, &volScaler1, 1);
-
-	BFLO_connectModules(&freqInterval, 0, &freqMultiplier, 1);
-	BFLO_connectModules(&freqMultiplier, 0, &fifthOsc, 0);
-
-	BFLO_connectModules(&fundamentalOsc, 0, &volScaler0, 0);
+	BFLO_connectModules(&freqControl, 0, &osc, 0);
+	BFLO_connectModules(&table, 0, &osc, 1);
+	BFLO_connectModules(&osc, 0, &env, 0);
+	BFLO_connectModules(&envReset, 0, &env, 0);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 
@@ -137,12 +136,11 @@ int main(void) {
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
 
-                int16_t fundamentalSample = (int16_t)(((float *)(volScaler0.outputs[0].data))[index]);
-				int16_t fifthSample = (int16_t)(((float *)(fundamentalOsc.outputs[0].data))[index]);        
+                int16_t sample = (int16_t)(((float *)(env.outputs[0].data))[index]);     
 
 				// Play fundamental on the left channel, fifth on the right 
-				PlayBuff[i] = fundamentalSample;
-				PlayBuff[i + 1] = fifthSample;
+				PlayBuff[i] = sample;
+				PlayBuff[i + 1] = sample;
 
                 index++;
 			}

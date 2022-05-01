@@ -11,7 +11,9 @@
 void BFLO_processOscillatorLUTModule(module_t * module) {
     float volatile frequency, currentPhase, phaseIncrement;
 
-    // Get internal module parameters
+    table_t * inTable = BFLO_getInputTable(module, 1);
+
+    // Get internal module parameters to use in the processing stage
     frequency = BFLO_getInputControl(module, 0);
     phaseIncrement = (frequency * 1024) / 44100;    // TODO: Replace magic numbers
     currentPhase = *(float *)module->parameters[1].data;
@@ -26,7 +28,7 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
         }
 
         // Set the next sample in the output buffer as the value in the look-up table at the current phase 
-        ((float *)(module->outputs[0].data))[i] = SineLUT[(uint16_t)(currentPhase)];
+        ((float *)(module->outputs[0].data))[i] = inTable->samples[(uint16_t)(currentPhase)];
     }
 
     // Update the module's current phase internal parameter
@@ -53,7 +55,7 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * 
     // Set initial parameter values
     *(float *)(module->parameters[0].data) = initFrequency;
     *(float *)(module->parameters[1].data) = 0.0f;
-    *(float *)(module->parameters[2].data) = (initFrequency * 1024) / 44100;    // TODO: Replace magic numbers // QUESTION: Does this value actually need to be stored? Recomputed in procees loop anyway 
+    *(float *)(module->parameters[2].data) = (initFrequency * MAX_LUT_SIZE) / 44100;    // TODO: Replace magic numbers // QUESTION: Does this value actually need to be stored? Recomputed in procees loop anyway 
 
     // Set module's associated process
     module->process = BFLO_processOscillatorLUTModule;
@@ -63,18 +65,6 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * 
     module->inputs[1].type = TABLE;
     
     module->outputs[0].type = BUFFER;
-
-    // TODO: Remove these when LUT received externally
-    // Set up the sine look-up table:
-	for (int i = 0; i < LUTSIZE; i++) {
-		float q = 32760 * sin(i * 2.0 * PI / LUTSIZE);
-		SineLUT[i] = q;
-	}
-
-    for (int i = 0; i < LUTSIZE; i++) {
-		float q = -32760 + (i * 65520 / (LUTSIZE - 1));
-		SawUpLUT[i] = q;
-	}
 
     return 1;
 }

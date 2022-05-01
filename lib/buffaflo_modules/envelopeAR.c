@@ -15,7 +15,7 @@ void BFLO_processEnvelopeARModule(module_t * module) {
     // Get reset input 
     reset = BFLO_getInputControl(module, 1);
 
-    // Get internal module parameters
+    // Get internal module parameters to use in the processing stage
     attackSamples = *(float *)module->parameters[0].data;
     releaseSamples = *(float *)module->parameters[1].data;
     currentSample = *(float *)module->parameters[2].data;
@@ -33,9 +33,14 @@ void BFLO_processEnvelopeARModule(module_t * module) {
         } 
         
         // If in release stage, ramp down to 0
-        else {
+        else if(currentSample < attackSamples + releaseSamples) {
             ((float *)(module->outputs[0].data))[i] = buffer0[i] * (1 - ((currentSample - attackSamples) / releaseSamples));
             currentSample++;
+        }
+
+        // Once envelope has finished, set amplitude as 0
+        else {
+            ((float *)(module->outputs[0].data))[i] = 0.0f;
         }
     }
 

@@ -18,6 +18,7 @@
 #define FIFTH_INTERVAL 1.49830674321f
 
 table_t SineTable;
+table_t SquareTable;
 int16_t PlayBuff[PBSIZE];
 
 enum eBufferStatus {empty, finished, firstHalfReq, firstHalfDone, secondHalfReq, secondHalfDone} bufferStatus = empty;
@@ -50,17 +51,19 @@ void setupAudioAndPeripherals(void) {
 	myAudioInitialisePeripherals(OUTPUT_DEVICE_AUTO, 80, AUDIO_FREQUENCY_44K);
     
 	// Initialise the audio buffer with silence:
-	for(int i=0; i <= PBSIZE; i++) {
+	for(int i=0; i < PBSIZE; i++) {
 		PlayBuff[i] = 0;
 	}
 }
 
 void setupLUTs(void) {
-	// Fill the sine table with samples
+	// Fill the lookup table with samples
 	BFLO_generateLUT(SineTable.samples, SINE);
+	BFLO_generateLUT(SquareTable.samples, SQUARE);
 
-	// Give it a name
+	// Give the tables a name
 	strncpy(SineTable.name, "Sine Lookup", MAX_NAME_LENGTH);
+	strncpy(SquareTable.name, "Square Lookup", MAX_NAME_LENGTH);
 }
 
 int main(void) {
@@ -76,12 +79,12 @@ int main(void) {
 	BFLO_initControlModule(&envReset, &synthGraph, "Frequency Control", 0.0f);
 	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
-	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 5.0f, 5.0f);
+	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 22050.0f);
 
 	BFLO_connectModules(&freqControl, 0, &osc, 0);
 	BFLO_connectModules(&table, 0, &osc, 1);
 	BFLO_connectModules(&osc, 0, &env, 0);
-	BFLO_connectModules(&envReset, 0, &env, 0);
+	BFLO_connectModules(&envReset, 0, &env, 1);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 
@@ -129,9 +132,6 @@ int main(void) {
 		
 		if (startFill != endFill) {
 			BFLO_processGraph(&synthGraph);
-			// BFLO_processControlMultiplierModule(&freqMultiplier);
-            // BFLO_processOscillatorLUTModule(&fundamentalOsc);
-			// BFLO_processOscillatorLUTModule(&fifthOsc);
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {

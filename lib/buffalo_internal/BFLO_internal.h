@@ -67,6 +67,7 @@ typedef struct module { // QUESTION: Is this kind of forward-declaration sutiabl
 typedef struct {
     char name[MAX_NAME_LENGTH];         // Name of the lookup table
     float samples[MAX_LUT_SIZE];        // Array of samples in the lookup table
+    uint32_t size;                      // Number of samples in the lookup table
 } table_t;
 
 /*~~~~~ Utility Functions  ~~~~~*/

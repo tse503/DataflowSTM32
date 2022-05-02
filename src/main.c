@@ -8,6 +8,9 @@
 #include "oscillatorLUT.h"
 #include "lookupTable.h"
 #include "envelopeAR.h"
+#include "samplePlayer.h"
+
+#include "samples.h"
 
 #include <stm32f407xx.h>
 #include <stdint.h>
@@ -61,6 +64,10 @@ void setupLUTs(void) {
 	BFLO_generateLUT(SineTable.samples, SINE);
 	BFLO_generateLUT(SquareTable.samples, SQUARE);
 
+	// Set lookup table sizes
+	SineTable.size = 1024;
+	SquareTable.size = 1024;
+
 	// Give the tables a name
 	strncpy(SineTable.name, "Sine Lookup", MAX_NAME_LENGTH);
 	strncpy(SquareTable.name, "Square Lookup", MAX_NAME_LENGTH);
@@ -71,15 +78,16 @@ int main(void) {
 	setupLUTs();
 
     graph_t synthGraph;
-    module_t freqControl, envReset, table, osc, env;
+    module_t sampler, freqControl, envReset, table, osc, env;	
 
     BFLO_initGraph(&synthGraph);
 
+	BFLO_initSamplePlayerModule(&sampler, &synthGraph, "Sampler", KickSamples);
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", 440.0f);
 	BFLO_initControlModule(&envReset, &synthGraph, "Frequency Control", 0.0f);
 	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
-	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 22050.0f);
+	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 2000.0f);
 
 	BFLO_connectModules(&freqControl, 0, &osc, 0);
 	BFLO_connectModules(&table, 0, &osc, 1);
@@ -95,6 +103,8 @@ int main(void) {
 		if (isUserButtonPressed()) {
 			// Check if button has been just been pressed (button status previously = 0)
 			if (userButtonStatus == 0) {
+				//On button press, reset AR envelope
+				BFLO_setOutputControl(&envReset, 0, 1.0f);
                 // On button press, increment the note in the scale
 				BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
 				scaleIndex += scaleDirection;
@@ -109,6 +119,7 @@ int main(void) {
 			}			
 		} else {
 			LEDOff(LED_GREEN);
+			BFLO_setOutputControl(&envReset, 0, 0.0f);
 			userButtonStatus = 0;
 		}
 

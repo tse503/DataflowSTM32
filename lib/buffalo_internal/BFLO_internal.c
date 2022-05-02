@@ -108,7 +108,7 @@ void BFLO_setOutputControl(module_t * module, uint32_t outputIndex, float value)
     *(float *)(module->outputs[outputIndex].data) = value;
 }
 
-/* Gets a pointer to the incoming buffer of module at inputIndex */ 
+/* Returns a pointer to the module's incoming buffer input at inputIndex */ 
 float * BFLO_getInputBuffer(module_t * module, uint32_t inputIndex) {
     // Check specified input index is within bounds of module's inputs
     if (inputIndex < module->numInputs) {
@@ -131,6 +131,7 @@ float * BFLO_getOutputBuffer(module_t * module, uint32_t outputIndex) {
     return (float *)(module->outputs[outputIndex].data);
 }
 
+/* Returns a pointer to the module's incoming table input at inputIndex */ 
 table_t * BFLO_getInputTable(module_t * module, uint32_t inputIndex) {
     // Check specified input index is within bounds of module's inputs
     if (inputIndex < module->numInputs) {
@@ -147,7 +148,7 @@ table_t * BFLO_getInputTable(module_t * module, uint32_t inputIndex) {
     return NULL;
 }
 
-/* Function that does nothing. Used in process member for modules that don't perform a process. */
+/* Function that does nothing. Used in module_t struct's process member for modules that don't perform a process. */
 void BFLO_doNothing(module_t * module) {
     return;
 }

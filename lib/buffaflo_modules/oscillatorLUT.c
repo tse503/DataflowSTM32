@@ -1,6 +1,4 @@
 #include "oscillatorLUT.h"
-#include <stdlib.h>
-#include <string.h>
 
 /* Lookup table oscillator
  * Input 0: CONTROL type, frequency of oscillator in Hertz
@@ -15,7 +13,7 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
 
     // Get internal module parameters to use in the processing stage
     frequency = BFLO_getInputControl(module, 0);
-    phaseIncrement = (frequency * 1024) / 44100;    // TODO: Replace magic numbers
+    phaseIncrement = (frequency * inTable->size) / 44100;    // TODO: Replace magic numbers
     currentPhase = *(float *)module->parameters[1].data;
 
     /* Fill output buffer with values from look-up table */
@@ -23,8 +21,8 @@ void BFLO_processOscillatorLUTModule(module_t * module) {
         currentPhase += phaseIncrement;
         
         // If current phase exceeds look-up table size, wrap-around
-        if (currentPhase >= LUTSIZE) {
-            currentPhase -= LUTSIZE;
+        if (currentPhase >= inTable->size) {
+            currentPhase -= inTable->size;
         }
 
         // Set the next sample in the output buffer as the value in the look-up table at the current phase 

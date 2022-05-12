@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 512
 #define MAX_LUT_SIZE 1024
 #define MAX_GRAPH_SIZE 8
 #define MAX_NAME_LENGTH 32
@@ -35,6 +35,8 @@ enum IO_type {BUFFER, CONTROL, TABLE};
 typedef struct { // QUESTION: Separate array for parameter and operation modules? 
     uint32_t size;                              // Current count of modules connected in the graph                    
     struct module * modules[MAX_GRAPH_SIZE];    // Array to hold pointer-to-modules
+    float * audioLeft[BUFFER_SIZE];             // Pointer to audio buffer holding samples for left channel output
+    float * audioRight[BUFFER_SIZE];            // Pointer to audio buffer holding samples for right channel output
 } graph_t;
 
 /* Data type for a module input */

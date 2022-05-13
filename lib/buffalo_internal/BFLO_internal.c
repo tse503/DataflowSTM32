@@ -22,7 +22,7 @@ void BFLO_initModule(module_t * module, graph_t * graph, char * moduleName, uint
     if (numOutputAllocations == 1) {
         module->outputs = malloc(sizeof(output_t));
     } else if (numOutputAllocations > 1) {
-        module->outputs = calloc(numInputAllocations, sizeof(output_t));
+        module->outputs = calloc(numOutputAllocations, sizeof(output_t));
     }
 
     // Allocate memory for parameters

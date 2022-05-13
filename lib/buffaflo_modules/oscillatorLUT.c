@@ -53,7 +53,7 @@ uint32_t BFLO_initOcillatorLUTModule(module_t * module, graph_t * graph, char * 
     // Set initial parameter values
     *(float *)(module->parameters[0].data) = initFrequency;
     *(float *)(module->parameters[1].data) = 0.0f;
-    *(float *)(module->parameters[2].data) = (initFrequency * MAX_LUT_SIZE) / 44100;    // TODO: Replace magic numbers // QUESTION: Does this value actually need to be stored? Recomputed in procees loop anyway 
+    *(float *)(module->parameters[2].data) = (initFrequency * MAX_LUT_SIZE) / 44100;    // TODO: Replace magic numbers // QUESTION: Does this value actually need to be stored?  No, it will be recomputed in each procees loop anyway 
 
     // Set module's associated process
     module->process = BFLO_processOscillatorLUTModule;

@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <math.h>
 
-#define PBSIZE 4096
+#define PBSIZE 2048
 
 #define FIFTH_INTERVAL 1.49830674321f
 

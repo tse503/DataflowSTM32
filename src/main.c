@@ -115,7 +115,6 @@ int main(void) {
 
 	BFLO_initSamplePlayerModule(&sampler, &synthGraph, "Sampler", KickSamples);
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", 440.0f);
-	BFLO_initControlModule(&envReset, &synthGraph, "Frequency Control", 0.0f);
 	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
 	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 2000.0f);
@@ -125,7 +124,6 @@ int main(void) {
 	BFLO_connectModules(&freqControl, 0, &osc, 0);
 	BFLO_connectModules(&table, 0, &osc, 1);
 	BFLO_connectModules(&osc, 0, &env, 0);
-	// BFLO_connectModules(&envReset, 0, &env, 1);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 

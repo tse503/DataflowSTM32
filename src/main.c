@@ -157,7 +157,7 @@ int main(void) {
 		// }
 
 		// printf("Adding a tad of delay in the loop...\n");	// QUESTION: Why does adding some delay make the sound work
-		// LEDOffColour(ORANGE_LED);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
+		LEDOff(LED_ALL);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
 
 		// If there's been a request to fill half of the buffer, then set the start and end points to fill
 		uint32_t startFill = 0, endFill = 0;
@@ -177,11 +177,11 @@ int main(void) {
 		if (startFill != endFill) {
 			BFLO_processGraph(&synthGraph);
 
-			if(BFLO_getOutputControl(&buttonDiscovery, 0) == 0) {
-				LEDOn(LED_ALL);
-			} else {
-				LEDOff(LED_ALL);
-			}
+			// if(BFLO_getOutputControl(&buttonDiscovery, 0) == 0) {
+			// 	LEDOn(LED_ALL);
+			// } else {
+			// 	LEDOff(LED_ALL);
+			// }
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {

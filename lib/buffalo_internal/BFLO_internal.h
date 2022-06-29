@@ -1,6 +1,8 @@
 #ifndef DATAFLOW_H
 #define DATAFLOW_H
 
+#include <stm32f407xx.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

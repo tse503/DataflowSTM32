@@ -5,10 +5,12 @@
 #include "BFLO_internal.h"
 #include "BFLO_tableGenerator.h"
 #include "control.h"
-#include "oscillatorLUT.h"
-#include "lookupTable.h"
+#include "hardware/buttonDiscovery.h"
+#include "hardware/keyboard/buttonC.h"
+#include "synthesis/oscillatorLUT.h"
+#include "synthesis/lookupTable.h"
 #include "envelopeAR.h"
-#include "samplePlayer.h"
+#include "sampling/samplePlayer.h"
 
 #include "samples.h"
 
@@ -44,7 +46,7 @@ void myAudioTransferCompleteCallback(void) {
 
 void setupAudioAndPeripherals(void) {
     initUserLEDs();
-	initUserButton();	
+	// initUserButton();	
 
 	// Speed up the clock, then configure the audio timer (required for checking timeouts):
 	myAudioSpeedUpTheSystemClock();
@@ -73,12 +75,41 @@ void setupLUTs(void) {
 	strncpy(SquareTable.name, "Square Lookup", MAX_NAME_LENGTH);
 }
 
+// int main(void) {
+//     setupAudioAndPeripherals();
+// 	setupLUTs();
+
+//     graph_t synthGraph;
+//     module_t buttonDiscovery, buttonC;
+
+//     BFLO_initGraph(&synthGraph);
+
+// 	BFLO_initButtonDiscoveryModule(&buttonDiscovery, &synthGraph, "Button Discovery");
+// 	BFLO_initButtonCModule(&buttonC, &synthGraph, "Button C");
+
+// 	while(1) {
+// 		BFLO_processGraph(&synthGraph);
+
+// 		if (BFLO_getOutputControl(&buttonC, 0) == 1) {
+// 			LEDOn(LED_ORANGE);
+// 		} else {
+// 			LEDOff(LED_ORANGE);
+// 		}
+
+// 		if (BFLO_getOutputControl(&buttonDiscovery, 0) == 1) {
+// 			LEDOn(LED_GREEN);
+// 		} else {
+// 			LEDOff(LED_GREEN);
+// 		}
+// 	}
+// }
+
 int main(void) {
     setupAudioAndPeripherals();
 	setupLUTs();
 
     graph_t synthGraph;
-    module_t sampler, freqControl, envReset, table, osc, env;	
+    module_t sampler, freqControl, envReset, table, osc, env, buttonDiscovery;	
 
     BFLO_initGraph(&synthGraph);
 
@@ -88,11 +119,13 @@ int main(void) {
 	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
 	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 2000.0f);
+	BFLO_initButtonDiscoveryModule(&buttonDiscovery, &synthGraph, "Discovery User Button");
 
+	BFLO_connectModules(&buttonDiscovery, 0, &env, 1);
 	BFLO_connectModules(&freqControl, 0, &osc, 0);
 	BFLO_connectModules(&table, 0, &osc, 1);
 	BFLO_connectModules(&osc, 0, &env, 0);
-	BFLO_connectModules(&envReset, 0, &env, 1);
+	// BFLO_connectModules(&envReset, 0, &env, 1);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 
@@ -100,28 +133,28 @@ int main(void) {
 	myAudioStartPlaying(PlayBuff, PBSIZE);
 
 	while(1) {
-		if (isUserButtonPressed()) {
-			// Check if button has been just been pressed (button status previously = 0)
-			if (userButtonStatus == 0) {
-				//On button press, reset AR envelope
-				BFLO_setOutputControl(&envReset, 0, 1.0f);
-                // On button press, increment the note in the scale
-				BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
-				scaleIndex += scaleDirection;
-                // When reached either end of scale, change direction
-				if (scaleIndex == 7) {
-					scaleDirection = -1;
-				} else if (scaleIndex == 0) {
-					scaleDirection = 1;
-				}
-				LEDOn(LED_GREEN);
-				userButtonStatus = 1;
-			}			
-		} else {
-			LEDOff(LED_GREEN);
-			BFLO_setOutputControl(&envReset, 0, 0.0f);
-			userButtonStatus = 0;
-		}
+		// if (isUserButtonPressed()) {
+		// 	// Check if button has been just been pressed (button status previously = 0)
+		// 	if (userButtonStatus == 0) {
+		// 		//On button press, reset AR envelope
+		// 		BFLO_setOutputControl(&envReset, 0, 1.0f);
+        //         // On button press, increment the note in the scale
+		// 		BFLO_setOutputControl(&freqControl, 0, CMajScale[scaleIndex]);
+		// 		scaleIndex += scaleDirection;
+        //         // When reached either end of scale, change direction
+		// 		if (scaleIndex == 7) {
+		// 			scaleDirection = -1;
+		// 		} else if (scaleIndex == 0) {
+		// 			scaleDirection = 1;
+		// 		}
+		// 		LEDOn(LED_GREEN);
+		// 		userButtonStatus = 1;
+		// 	}			
+		// } else {
+		// 	LEDOff(LED_GREEN);
+		// 	BFLO_setOutputControl(&envReset, 0, 0.0f);
+		// 	userButtonStatus = 0;
+		// }
 
 		// printf("Adding a tad of delay in the loop...\n");	// QUESTION: Why does adding some delay make the sound work
 		// LEDOffColour(ORANGE_LED);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
@@ -143,6 +176,12 @@ int main(void) {
 		
 		if (startFill != endFill) {
 			BFLO_processGraph(&synthGraph);
+
+			if(BFLO_getOutputControl(&buttonDiscovery, 0) == 0) {
+				LEDOn(LED_ALL);
+			} else {
+				LEDOff(LED_ALL);
+			}
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {

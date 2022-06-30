@@ -7,7 +7,7 @@
  */
 
 void BFLO_processEnvelopeARModule(module_t * module) {
-    float volatile reset, attackSamples, releaseSamples, currentSample;
+    float volatile reset, attackSamples, releaseSamples, currentSample, previousReset;
 
     // Pointer to the incoming audio buffer
     float * buffer0 = BFLO_getInputBuffer(module, 0);
@@ -19,9 +19,10 @@ void BFLO_processEnvelopeARModule(module_t * module) {
     attackSamples = *(float *)module->parameters[0].data;
     releaseSamples = *(float *)module->parameters[1].data;
     currentSample = *(float *)module->parameters[2].data;
+    previousReset = *(float *)module->parameters[3].data;
 
-    // If the reset input is true, reset the current sample position to 0
-    if (reset) {
+    // If the reset input is true and previous reset is false (reset has gone from low to high), reset the current sample position to 0
+    if (reset && (!previousReset)) {
         currentSample = 0;
     }
 
@@ -46,29 +47,35 @@ void BFLO_processEnvelopeARModule(module_t * module) {
 
     // Update envelope position internal parameter
     *(float *)(module->parameters[2].data) = currentSample;
+
+    // Set previous reset internal parameter to current reset value for next function call
+    *(float *)(module->parameters[3].data) = reset;
 }
 
 uint32_t BFLO_initEnvelopeARModule(module_t * module, graph_t * graph, char * moduleName, float initAttackSamples, float initReleaseSamples) {
-    // Perform common module initialisation tasks - allocating memory for 2 inputs, 1 output, 3 parameters
-    BFLO_initModule(module, graph, moduleName, 2, 1, 3);
+    // Perform common module initialisation tasks - allocating memory for 2 inputs, 1 output, 4 parameters
+    BFLO_initModule(module, graph, moduleName, 2, 1, 4);
 
     // Allocate memory for one buffer in output 0
     module->outputs[0].data = calloc(BUFFER_SIZE, sizeof(float));
 
-    // Allocate memory for 3 floats in each parameter's data member
+    // Allocate memory for 4 floats in each parameter's data member
     module->parameters[0].data = malloc(sizeof(float));
     module->parameters[1].data = malloc(sizeof(float));
     module->parameters[2].data = malloc(sizeof(float));
+    module->parameters[3].data = malloc(sizeof(float));
 
     // Set parameter names
     strncpy(module->parameters[0].name, "Attack Time (Samples)", MAX_NAME_LENGTH);
     strncpy(module->parameters[1].name, "Release Time (Samples)", MAX_NAME_LENGTH);
     strncpy(module->parameters[2].name, "Envelope Position", MAX_NAME_LENGTH);
+    strncpy(module->parameters[3].name, "Previous Reset Value", MAX_NAME_LENGTH);
 
     // Set initial parameter values
     *(float *)(module->parameters[0].data) = initAttackSamples;
     *(float *)(module->parameters[1].data) = initReleaseSamples;
     *(float *)(module->parameters[2].data) = 0.0f;
+    *(float *)(module->parameters[3].data) = 0.0f;
 
     // Set module's associated process
     module->process = BFLO_processEnvelopeARModule;

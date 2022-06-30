@@ -109,18 +109,20 @@ int main(void) {
 	setupLUTs();
 
     graph_t synthGraph;
-    module_t sampler, freqControl, envReset, table, osc, env, buttonDiscovery;	
+    module_t sampler, freqControl, envReset, table, osc, env, buttonDiscovery, buttonC;	
 
     BFLO_initGraph(&synthGraph);
 
-	BFLO_initSamplePlayerModule(&sampler, &synthGraph, "Sampler", KickSamples);
+	// BFLO_initSamplePlayerModule(&sampler, &synthGraph, "Sampler", KickSamples);
     BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", 440.0f);
 	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
 	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 2000.0f);
 	BFLO_initButtonDiscoveryModule(&buttonDiscovery, &synthGraph, "Discovery User Button");
 
-	BFLO_connectModules(&buttonDiscovery, 0, &env, 1);
+	BFLO_initButtonCModule(&buttonC, &synthGraph, "Button C");
+
+	BFLO_connectModules(&buttonC, 0, &env, 1);
 	BFLO_connectModules(&freqControl, 0, &osc, 0);
 	BFLO_connectModules(&table, 0, &osc, 1);
 	BFLO_connectModules(&osc, 0, &env, 0);
@@ -129,6 +131,7 @@ int main(void) {
 
 	// Start the audio driver play routine:
 	myAudioStartPlaying(PlayBuff, PBSIZE);
+
 
 	while(1) {
 		// if (isUserButtonPressed()) {
@@ -155,7 +158,7 @@ int main(void) {
 		// }
 
 		// printf("Adding a tad of delay in the loop...\n");	// QUESTION: Why does adding some delay make the sound work
-		LEDOff(LED_ALL);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
+		// LEDOff(LED_ALL);	// QUESTION: Why does sound only play when an LED set on/off at start of while loop?
 
 		// If there's been a request to fill half of the buffer, then set the start and end points to fill
 		uint32_t startFill = 0, endFill = 0;
@@ -175,11 +178,11 @@ int main(void) {
 		if (startFill != endFill) {
 			BFLO_processGraph(&synthGraph);
 
-			// if(BFLO_getOutputControl(&buttonDiscovery, 0) == 0) {
-			// 	LEDOn(LED_ALL);
-			// } else {
-			// 	LEDOff(LED_ALL);
-			// }
+			if(GPIOE->IDR & GPIO_IDR_ID7_Msk) {
+				LEDOn(LED_RED);
+			} else {
+				LEDOff(LED_RED);
+			}
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
@@ -193,5 +196,7 @@ int main(void) {
                 index++;
 			}
 		}
+
+		LEDOn(LED_GREEN);
 	} // End of while loop	
 }

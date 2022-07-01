@@ -10,6 +10,10 @@
         "sampleplayer.h": "c",
         "samples.h": "c",
         "buttonf4.h": "c",
-        "bufferscaler.h": "c"
+        "bufferscaler.h": "c",
+        "buttond.h": "c",
+        "buttonc.h": "c",
+        "buttondiscovery.h": "c",
+        "lookuptable.h": "c"
     }
 }

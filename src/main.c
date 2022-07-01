@@ -7,7 +7,9 @@
 #include "control.h"
 #include "hardware/buttonDiscovery.h"
 #include "hardware/keyboard/buttonC.h"
+#include "hardware/keyboard/buttonCSharp.h"
 #include "hardware/keyboard/buttonD.h"
+#include "hardware/keyboard/buttonDSharp.h"
 #include "synthesis/oscillatorLUT.h"
 #include "synthesis/lookupTable.h"
 #include "arithmetic/bufferAdder.h"
@@ -111,23 +113,35 @@ int main(void) {
 	setupLUTs();
 
     graph_t synthGraph;
-    module_t table, freqC, freqD, oscC, oscD, envC, envD, buttonC, buttonD;	
+    module_t table;
+	module_t freqC, freqCSharp, freqD, freqDSharp;
+	module_t oscC, oscCSharp, oscD, oscDSharp;
+	module_t envC, envCSharp, envD, envDSharp;
+	module_t buttonC, buttonCSharp, buttonD, buttonDSharp;	
 
     BFLO_initGraph(&synthGraph);
 
-	BFLO_initButtonCModule(&buttonC, &synthGraph, "Button C");
-	BFLO_initButtonDModule(&buttonD, &synthGraph, "Button D");
+	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
 
-	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SquareTable);
+	BFLO_initButtonCModule(&buttonC, &synthGraph, "Button C");
+	BFLO_initButtonCSharpModule(&buttonCSharp, &synthGraph, "Button C#");
+	BFLO_initButtonDModule(&buttonD, &synthGraph, "Button D");
+	BFLO_initButtonDSharpModule(&buttonDSharp, &synthGraph, "Button D#");
 
     BFLO_initControlModule(&freqC, &synthGraph, "Frequency Control C", 261.63f);
+	BFLO_initControlModule(&freqCSharp, &synthGraph, "Frequency Control C#", 277.18f);
 	BFLO_initControlModule(&freqD, &synthGraph, "Frequency Control D", 293.66f);
+	BFLO_initControlModule(&freqDSharp, &synthGraph, "Frequency Control D#", 311.13f);
 
 	BFLO_initOcillatorLUTModule(&oscC, &synthGraph, "Oscillator C", 261.63f);
+	BFLO_initOcillatorLUTModule(&oscCSharp, &synthGraph, "Oscillator C#", 277.18f);
 	BFLO_initOcillatorLUTModule(&oscD, &synthGraph, "Oscillator D", 293.66f);
+	BFLO_initOcillatorLUTModule(&oscDSharp, &synthGraph, "Oscillator D#", 311.13f);
 
 	BFLO_initEnvelopeARModule(&envC, &synthGraph, "Envelope C", 22050.0f, 2000.0f);
+	BFLO_initEnvelopeARModule(&envCSharp, &synthGraph, "Envelope C#", 22050.0f, 2000.0f);
 	BFLO_initEnvelopeARModule(&envD, &synthGraph, "Envelope D", 22050.0f, 2000.0f);
+	BFLO_initEnvelopeARModule(&envDSharp, &synthGraph, "Envelope D#", 22050.0f, 2000.0f);
 
 
 	BFLO_connectModules(&buttonC, 0, &envC, 1);
@@ -135,10 +149,20 @@ int main(void) {
 	BFLO_connectModules(&table, 0, &oscC, 1);
 	BFLO_connectModules(&oscC, 0, &envC, 0);
 
+	BFLO_connectModules(&buttonCSharp, 0, &envCSharp, 1);
+	BFLO_connectModules(&freqCSharp, 0, &oscCSharp, 0);
+	BFLO_connectModules(&table, 0, &oscCSharp, 1);
+	BFLO_connectModules(&oscCSharp, 0, &envCSharp, 0);
+
 	BFLO_connectModules(&buttonD, 0, &envD, 1);
 	BFLO_connectModules(&freqD, 0, &oscD, 0);
 	BFLO_connectModules(&table, 0, &oscD, 1);
 	BFLO_connectModules(&oscD, 0, &envD, 0);
+
+	BFLO_connectModules(&buttonDSharp, 0, &envDSharp, 1);
+	BFLO_connectModules(&freqDSharp, 0, &oscDSharp, 0);
+	BFLO_connectModules(&table, 0, &oscDSharp, 1);
+	BFLO_connectModules(&oscDSharp, 0, &envDSharp, 0);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 
@@ -191,7 +215,7 @@ int main(void) {
 		if (startFill != endFill) {
 			BFLO_processGraph(&synthGraph);
 
-			if(GPIOE->IDR & GPIO_IDR_ID7_Msk) {
+			if(GPIOE->IDR & GPIO_IDR_ID10_Msk) {
 				LEDOn(LED_RED);
 			} else {
 				LEDOff(LED_RED);
@@ -199,9 +223,15 @@ int main(void) {
 
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
+				float mix = 0.08;
 
-                int16_t sampleL = (int16_t)(((float *)(envC.outputs[0].data))[index]);
-				int16_t sampleR = (int16_t)(((float *)(envD.outputs[0].data))[index]);     
+                float outC = (((float *)(envC.outputs[0].data))[index]);
+				float outCSharp = (((float *)(envCSharp.outputs[0].data))[index]);
+				float outD = (((float *)(envD.outputs[0].data))[index]);
+				float outDSharp = (((float *)(envDSharp.outputs[0].data))[index]);
+
+				int16_t sampleL = (mix * outC) + (mix * outCSharp) + (mix * outD) + (mix * outDSharp);     
+				int16_t sampleR = sampleL;
 
 				// Play fundamental on the left channel, fifth on the right 
 				PlayBuff[i] = sampleL;
@@ -211,6 +241,6 @@ int main(void) {
 			}
 		}
 
-		LEDOn(LED_GREEN);
+		LEDOn(LED_ORANGE);
 	} // End of while loop	
 }

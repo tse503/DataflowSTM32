@@ -7,10 +7,12 @@
 #include "control.h"
 #include "hardware/buttonDiscovery.h"
 #include "hardware/keyboard/buttonC.h"
+#include "hardware/keyboard/buttonD.h"
 #include "synthesis/oscillatorLUT.h"
 #include "synthesis/lookupTable.h"
+#include "arithmetic/bufferAdder.h"
+#include "arithmetic/bufferScaler.h"
 #include "envelopeAR.h"
-#include "sampling/samplePlayer.h"
 
 #include "samples.h"
 
@@ -109,23 +111,34 @@ int main(void) {
 	setupLUTs();
 
     graph_t synthGraph;
-    module_t sampler, freqControl, envReset, table, osc, env, buttonDiscovery, buttonC;	
+    module_t table, freqC, freqD, oscC, oscD, envC, envD, buttonC, buttonD;	
 
     BFLO_initGraph(&synthGraph);
 
-	// BFLO_initSamplePlayerModule(&sampler, &synthGraph, "Sampler", KickSamples);
-    BFLO_initControlModule(&freqControl, &synthGraph, "Frequency Control", 440.0f);
-	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SineTable);
-	BFLO_initOcillatorLUTModule(&osc, &synthGraph, "Oscillator", 440.0f);
-	BFLO_initEnvelopeARModule(&env, &synthGraph, "Envelope", 22050.0f, 2000.0f);
-	BFLO_initButtonDiscoveryModule(&buttonDiscovery, &synthGraph, "Discovery User Button");
-
 	BFLO_initButtonCModule(&buttonC, &synthGraph, "Button C");
+	BFLO_initButtonDModule(&buttonD, &synthGraph, "Button D");
 
-	BFLO_connectModules(&buttonC, 0, &env, 1);
-	BFLO_connectModules(&freqControl, 0, &osc, 0);
-	BFLO_connectModules(&table, 0, &osc, 1);
-	BFLO_connectModules(&osc, 0, &env, 0);
+	BFLO_initLookupTableModule(&table, &synthGraph, "Table", &SquareTable);
+
+    BFLO_initControlModule(&freqC, &synthGraph, "Frequency Control C", 261.63f);
+	BFLO_initControlModule(&freqD, &synthGraph, "Frequency Control D", 293.66f);
+
+	BFLO_initOcillatorLUTModule(&oscC, &synthGraph, "Oscillator C", 261.63f);
+	BFLO_initOcillatorLUTModule(&oscD, &synthGraph, "Oscillator D", 293.66f);
+
+	BFLO_initEnvelopeARModule(&envC, &synthGraph, "Envelope C", 22050.0f, 2000.0f);
+	BFLO_initEnvelopeARModule(&envD, &synthGraph, "Envelope D", 22050.0f, 2000.0f);
+
+
+	BFLO_connectModules(&buttonC, 0, &envC, 1);
+	BFLO_connectModules(&freqC, 0, &oscC, 0);
+	BFLO_connectModules(&table, 0, &oscC, 1);
+	BFLO_connectModules(&oscC, 0, &envC, 0);
+
+	BFLO_connectModules(&buttonD, 0, &envD, 1);
+	BFLO_connectModules(&freqD, 0, &oscD, 0);
+	BFLO_connectModules(&table, 0, &oscD, 1);
+	BFLO_connectModules(&oscD, 0, &envD, 0);
 
 	// BFLO_orderGraphDFS(&synthGraph);
 
@@ -187,11 +200,12 @@ int main(void) {
             uint32_t index = 0;
 			for (int i = startFill; i < endFill; i += 2) {
 
-                int16_t sample = (int16_t)(((float *)(env.outputs[0].data))[index]);     
+                int16_t sampleL = (int16_t)(((float *)(envC.outputs[0].data))[index]);
+				int16_t sampleR = (int16_t)(((float *)(envD.outputs[0].data))[index]);     
 
 				// Play fundamental on the left channel, fifth on the right 
-				PlayBuff[i] = sample;
-				PlayBuff[i + 1] = sample;
+				PlayBuff[i] = sampleL;
+				PlayBuff[i + 1] = sampleR;
 
                 index++;
 			}

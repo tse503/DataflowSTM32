@@ -9,6 +9,7 @@
         "bflo_tablegenerator.h": "c",
         "sampleplayer.h": "c",
         "samples.h": "c",
-        "buttonf4.h": "c"
+        "buttonf4.h": "c",
+        "bufferscaler.h": "c"
     }
 }
